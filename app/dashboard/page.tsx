@@ -43,12 +43,14 @@ const gateways = [
 ];
 
 const failedPayments = [
-  { email: "user@acme.com", amount: "₹4,299", gateway: "Razorpay", reason: "Insufficient funds", status: "Retrying in 4h", statusType: "retrying" as const, action: "Retry now" },
-  { email: "priya@startup.in", amount: "₹12,800", gateway: "Stripe", reason: "Card expired", status: "Email sent #2", statusType: "email" as const, action: "View" },
-  { email: "raj@example.com", amount: "₹2,999", gateway: "Cashfree", reason: "UPI mandate failed", status: "WA sent", statusType: "wa" as const, action: "View" },
-  { email: "meera@co.in", amount: "₹8,500", gateway: "Razorpay", reason: "Do not honor", status: "Recovered ✓", statusType: "recovered" as const, action: "View" },
-  { email: "amit@venture.com", amount: "₹19,999", gateway: "Stripe", reason: "Stolen card", status: "Hard decline ✗", statusType: "hard_decline" as const, action: "View" },
-  { email: "nisha@brand.co", amount: "₹6,499", gateway: "Razorpay", reason: "Insufficient funds", status: "Scheduled D5", statusType: "scheduled" as const, action: "View" },
+  { email: "alex.kumar@fintech.io", amount: "₹24,500", gateway: "Razorpay", reason: "Insufficient funds", status: "Retrying in 2h", statusType: "retrying" as const, action: "Retry now", time: "2m ago" },
+  { email: "sara@designstudio.in", amount: "₹8,999", gateway: "Stripe", reason: "Bank downtime", status: "Email sent (OTP)", statusType: "email" as const, action: "View", time: "8m ago" },
+  { email: "rohit@quickcommerce.in", amount: "₹1,200", gateway: "Cashfree", reason: "UPI timeout", status: "WA reminder sent", statusType: "wa" as const, action: "View", time: "14m ago" },
+  { email: "lisa@globaltrade.co", amount: "₹45,000", gateway: "PayU", reason: "Expired card", status: "Scheduled for 10PM", statusType: "scheduled" as const, action: "View", time: "28m ago" },
+  { email: "karan@web3.dev", amount: "₹12,499", gateway: "Razorpay", reason: "Authentication required", status: "Recovered ✓", statusType: "recovered" as const, action: "View", time: "1h ago" },
+  { email: "ananya@organic.in", amount: "₹3,250", gateway: "Stripe", reason: "Incorrect CVC", status: "Hard decline ✗", statusType: "hard_decline" as const, action: "View", time: "2h ago" },
+  // { email: "vikas@logistics.co", amount: "₹18,700", gateway: "Razorpay", reason: "Insufficient funds", status: "Retrying in 4h", statusType: "retrying" as const, action: "Retry now", time: "3h ago" },
+  // { email: "neha@edtech.in", amount: "₹5,499", gateway: "Cashfree", reason: "Do not honor", status: "Link sent", statusType: "email" as const, action: "View", time: "5h ago" },
 ];
 
 type ActivityType = "recovered" | "email" | "whatsapp" | "scheduled" | "hard_decline" | "new_failure";
@@ -92,6 +94,8 @@ const incomingActivities: Omit<ActivityItem, "id" | "createdAt">[] = [
   { text: "Hard decline: bank rejected — no retries", type: "hard_decline" },
   { text: "WhatsApp reminder sent to cfo@enterprise.in", type: "whatsapp" },
   { text: "Email #3 sent to billing@store.com", type: "email" },
+  { text: "₹9,800 recovered — Customer used self-service portal", type: "recovered" },
+  { text: "New failed payment: marketing@growth.io ₹6,700", type: "new_failure" },
 ];
 
 const formatRelativeTime = (timestamp: number) => {
@@ -185,8 +189,8 @@ export default function DashboardPage() {
 
   // ─── UX States ─────────────────────────────────────────────────
   const [isLoading, setIsLoading] = useState(true);
-  const [isGatewayConnected, setIsGatewayConnected] = useState(false);
-  const [hasFailedPayments, setHasFailedPayments] = useState(false);
+  const [isGatewayConnected, setIsGatewayConnected] = useState(true);
+  const [hasFailedPayments, setHasFailedPayments] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -618,7 +622,12 @@ export default function DashboardPage() {
                 ) : (
                   failedPayments.map((p, i) => (
                     <tr key={i} className="border-b border-border last:border-0 hover:bg-rx-overlay/50 transition-colors cursor-pointer">
-                      <td className="px-5 py-3 font-body text-rx-text-secondary">{p.email}</td>
+                      <td className="px-5 py-3">
+                        <div className="flex flex-col">
+                          <span className="font-body text-rx-text-secondary truncate max-w-[140px] md:max-w-none">{p.email}</span>
+                          <span className="text-[10px] text-rx-text-muted font-body">{(p as any).time}</span>
+                        </div>
+                      </td>
                       <td className="px-4 py-3 text-right font-mono text-rx-text-primary">{p.amount}</td>
                       <td className="px-4 py-3">
                         <span className={cn("text-[11px] px-1.5 py-0.5 rounded-md font-body", gatewayPillStyles[p.gateway])}>
@@ -666,7 +675,7 @@ export default function DashboardPage() {
           <div className="relative">
             <div className="max-h-[400px] overflow-y-auto">
               {isLoading ? (
-                [...Array(6)].map((_, i) => (
+                [...Array(8)].map((_, i) => (
                   <div key={i} className="flex items-start gap-3 px-5 py-4 border-b border-border last:border-0">
                     <div className="w-4 h-4 rounded-md bg-rx-overlay animate-[skeleton-pulse_2s_ease-in-out_infinite] shrink-0 mt-0.5" />
                     <div className="flex-1 space-y-2.5">

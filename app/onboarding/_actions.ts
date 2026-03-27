@@ -4,9 +4,6 @@ import { auth, clerkClient } from '@clerk/nextjs/server'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db'
 import { merchants, merchantBrandSettings } from '@/schema/merchants'
-import redisClient from '../radis/radis-client'
-import { redisConnection } from '@/lib/redis-connection'
-import { Queue } from 'bullmq'
 
 export const completeOnboarding = async (formData: FormData) => {
     const { isAuthenticated, userId } = await auth()
@@ -14,9 +11,6 @@ export const completeOnboarding = async (formData: FormData) => {
     if (!isAuthenticated || !userId) {
         return { error: 'Not authenticated' }
     }
-
-    // create a wellcome queue
-    const welcomeQueue = new Queue('welcomeQueue', { connection: redisConnection });
 
     // ── 1. Collect fields ────────────────────────────────────────────────────
 
@@ -129,41 +123,6 @@ export const completeOnboarding = async (formData: FormData) => {
             path: '/',
             maxAge: 60 * 60 * 24 * 365, // 1 year
         })
-
-
-        /**
-         * Store user form inoformation into the radis
-        */
-
-        // ## userid from the clerk auth
-        // create data for your redis 
-        const onboardRedis = {
-            clerkUserId: userId,
-            email,
-            fullName,
-            companyName,
-            businessLegalName: businessLegalName || "",
-            websiteUrl: websiteUrl || "",
-            businessType: businessType || "",
-            mrrRange: mrrRange || "",
-            gstNumber,
-            country,
-            status: 'onboarding',
-            onboardingStep: 5,
-            onboardingCompletedAt: new Date(),
-            trialStartedAt: new Date(),
-            trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14-day trial
-        }
-
-        await redisClient.json.set(`merchant:${userId}`, '$', onboardRedis)
-
-        /**
-         * send welcome notification to the userEmail
-         */
-        // added user information into the queue and worker process it later
-
-        await welcomeQueue.add("welcome", { onboardRedis })
-
 
         return { message: 'Onboarding complete' }
 
